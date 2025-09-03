@@ -1,0 +1,260 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px 30px;
+  text-align: center;
+}
+
+.header h1 {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.header p {
+  opacity: 0.9;
+  font-size: 0.95rem;
+}
+
+.main-content {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  height: calc(100vh - 160px);
+}
+
+.sidebar {
+  background: #f7f8fa;
+  border-right: 1px solid #e0e0e0;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.visualization {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-container {
+  flex: 1;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: auto;
+  position: relative;
+}
+
+.console-output {
+  margin-top: 20px;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 15px;
+  border-radius: 8px;
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 0.9rem;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.console-line {
+  margin: 2px 0;
+  line-height: 1.4;
+}
+
+.console-line.info {
+  color: #58a6ff;
+}
+
+.console-line.success {
+  color: #56d364;
+}
+
+.console-line.error {
+  color: #f85149;
+}
+
+.console-line.warning {
+  color: #d29922;
+}
+
+button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.secondary {
+  background: #6c757d;
+}
+
+button.danger {
+  background: #dc3545;
+}
+
+input[type="number"] {
+  padding: 8px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  width: 80px;
+}
+
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+textarea:focus, input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.section h3 {
+  margin-bottom: 10px;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.controls-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  align-items: center;
+}
+
+.slider-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.slider-control input[type="range"] {
+  flex: 1;
+}
+
+.current-operation {
+  background: #f0f0f0;
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 15px;
+}
+
+.current-operation strong {
+  color: #667eea;
+}
+
+.tree-node {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tree-node.highlight {
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.node-key {
+  fill: white;
+  font-size: 14px;
+  font-weight: bold;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.node-rect {
+  fill: #667eea;
+  stroke: #5a67d8;
+  stroke-width: 2;
+  rx: 4;
+}
+
+.node-rect.searching {
+  fill: #f59e0b;
+  stroke: #d97706;
+}
+
+.node-rect.found {
+  fill: #10b981;
+  stroke: #059669;
+}
+
+.node-rect.deleting {
+  fill: #ef4444;
+  stroke: #dc2626;
+}
+
+.node-rect.splitting {
+  fill: #8b5cf6;
+  stroke: #7c3aed;
+  animation: pulse 0.5s infinite;
+}
+
+.tree-link {
+  stroke: #cbd5e1;
+  stroke-width: 2;
+  fill: none;
+}
