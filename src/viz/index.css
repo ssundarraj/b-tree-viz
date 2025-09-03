@@ -6,7 +6,7 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #f5f5f5;
   min-height: 100vh;
 }
 
@@ -29,7 +29,7 @@ body {
 }
 
 .header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #4a5568;
   color: white;
   padding: 20px 30px;
   text-align: center;
@@ -107,7 +107,7 @@ body {
 }
 
 button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #4a5568;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -115,12 +115,11 @@ button {
   cursor: pointer;
   font-size: 0.95rem;
   font-weight: 500;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background: #2d3748;
 }
 
 button:disabled {
@@ -156,7 +155,7 @@ textarea {
 
 textarea:focus, input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #4a5568;
 }
 
 .section {
@@ -195,7 +194,7 @@ textarea:focus, input:focus {
 }
 
 .current-operation strong {
-  color: #667eea;
+  color: #4a5568;
 }
 
 .tree-node {
@@ -226,35 +225,35 @@ textarea:focus, input:focus {
 }
 
 .node-rect {
-  fill: #667eea;
-  stroke: #5a67d8;
+  fill: #718096;
+  stroke: #4a5568;
   stroke-width: 2;
   rx: 4;
 }
 
 .node-rect.searching {
-  fill: #f59e0b;
-  stroke: #d97706;
+  fill: #ed8936;
+  stroke: #c05621;
 }
 
 .node-rect.found {
-  fill: #10b981;
-  stroke: #059669;
+  fill: #48bb78;
+  stroke: #38a169;
 }
 
 .node-rect.deleting {
-  fill: #ef4444;
-  stroke: #dc2626;
+  fill: #f56565;
+  stroke: #e53e3e;
 }
 
 .node-rect.splitting {
-  fill: #8b5cf6;
-  stroke: #7c3aed;
+  fill: #9f7aea;
+  stroke: #805ad5;
   animation: pulse 0.5s infinite;
 }
 
 .tree-link {
-  stroke: #cbd5e1;
+  stroke: #a0aec0;
   stroke-width: 2;
   fill: none;
 }
