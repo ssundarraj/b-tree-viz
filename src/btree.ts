@@ -18,7 +18,7 @@ export class BTree<T> {
       if (a < b) return -1;
       if (a > b) return 1;
       return 0;
-    }
+    },
   ) {
     if (order < 3) {
       throw new Error('Order must be at least 3');
@@ -57,7 +57,7 @@ export class BTree<T> {
     }
 
     const deleted = this.deleteFromNode(this.root, key);
-    
+
     if (this.root.keys.length === 0) {
       if (this.root.isLeaf) {
         this.root = null;
@@ -108,7 +108,7 @@ export class BTree<T> {
       keys: [],
       children: [],
       isLeaf,
-      parent: undefined
+      parent: undefined,
     };
   }
 
@@ -227,25 +227,25 @@ export class BTree<T> {
         return this.deleteFromNonLeaf(node, idx);
       }
     } else if (!node.isLeaf) {
-      const flag = (idx === node.keys.length);
-      
+      const flag = idx === node.keys.length;
+
       if (node.children[idx].keys.length < this.minKeys + 1) {
         this.fill(node, idx);
       }
-      
+
       if (flag && idx > node.keys.length) {
         return this.deleteFromNode(node.children[idx - 1], key);
       } else {
         return this.deleteFromNode(node.children[idx], key);
       }
     }
-    
+
     return false;
   }
 
   private deleteFromNonLeaf(node: BTreeNode<T>, idx: number): boolean {
     const key = node.keys[idx];
-    
+
     if (node.children[idx].keys.length >= this.minKeys + 1) {
       const pred = this.getPredecessor(node, idx);
       node.keys[idx] = pred;
@@ -293,9 +293,9 @@ export class BTree<T> {
   private borrowFromPrev(node: BTreeNode<T>, idx: number): void {
     const child = node.children[idx];
     const sibling = node.children[idx - 1];
-    
+
     child.keys.unshift(node.keys[idx - 1]);
-    
+
     if (!child.isLeaf) {
       child.children.unshift(sibling.children[sibling.children.length - 1]);
       if (child.children[0]) {
@@ -303,7 +303,7 @@ export class BTree<T> {
       }
       sibling.children.pop();
     }
-    
+
     node.keys[idx - 1] = sibling.keys[sibling.keys.length - 1];
     sibling.keys.pop();
   }
@@ -311,9 +311,9 @@ export class BTree<T> {
   private borrowFromNext(node: BTreeNode<T>, idx: number): void {
     const child = node.children[idx];
     const sibling = node.children[idx + 1];
-    
+
     child.keys.push(node.keys[idx]);
-    
+
     if (!child.isLeaf) {
       child.children.push(sibling.children[0]);
       if (sibling.children[0]) {
@@ -321,7 +321,7 @@ export class BTree<T> {
       }
       sibling.children.shift();
     }
-    
+
     node.keys[idx] = sibling.keys[0];
     sibling.keys.shift();
   }
@@ -329,13 +329,13 @@ export class BTree<T> {
   private merge(node: BTreeNode<T>, idx: number): void {
     const child = node.children[idx];
     const sibling = node.children[idx + 1];
-    
+
     child.keys.push(node.keys[idx]);
-    
+
     for (let i = 0; i < sibling.keys.length; i++) {
       child.keys.push(sibling.keys[i]);
     }
-    
+
     if (!child.isLeaf) {
       for (let i = 0; i < sibling.children.length; i++) {
         child.children.push(sibling.children[i]);
@@ -344,7 +344,7 @@ export class BTree<T> {
         }
       }
     }
-    
+
     node.keys.splice(idx, 1);
     node.children.splice(idx + 1, 1);
   }
@@ -357,3 +357,4 @@ export class BTree<T> {
     return idx;
   }
 }
+
