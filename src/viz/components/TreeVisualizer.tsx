@@ -4,25 +4,9 @@ import { BTree, BTreeNode } from '../../btree';
 
 interface TreeVisualizerProps {
   tree: BTree<number>;
-  version: number;
-  highlightedNode?: number;
-  operationType?: 'insert' | 'delete' | 'search';
 }
 
-interface TreeNodeData {
-  node: BTreeNode<number>;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-const TreeVisualizer: React.FC<TreeVisualizerProps> = ({ 
-  tree, 
-  version, 
-  highlightedNode,
-  operationType 
-}) => {
+const TreeVisualizer: React.FC<TreeVisualizerProps> = ({ tree }) => {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -43,12 +27,11 @@ const TreeVisualizer: React.FC<TreeVisualizerProps> = ({
       return;
     }
 
-    const width = 1000;
-    const height = 600;
+    const width = 800;
+    const height = 500;
     const nodeWidth = 40;
     const nodeHeight = 35;
-    const levelHeight = 100;
-    const nodeSpacing = 15;
+    const levelHeight = 80;
 
     svg.attr('viewBox', `0 0 ${width} ${height}`);
 
@@ -61,107 +44,67 @@ const TreeVisualizer: React.FC<TreeVisualizerProps> = ({
       x: number, 
       y: number, 
       levelWidth: number
-    ): TreeNodeData[] => {
-      const nodeData: TreeNodeData[] = [];
+    ) => {
       const boxWidth = node.keys.length * nodeWidth + (node.keys.length - 1) * 5;
       
-      nodeData.push({
-        node,
-        x: x - boxWidth / 2,
-        y,
-        width: boxWidth,
-        height: nodeHeight
+      // Draw node rectangle for each key
+      node.keys.forEach((key, i) => {
+        const keyX = x - boxWidth / 2 + i * (nodeWidth + 5);
+        
+        g.append('rect')
+          .attr('x', keyX)
+          .attr('y', y)
+          .attr('width', nodeWidth)
+          .attr('height', nodeHeight)
+          .attr('fill', '#718096')
+          .attr('stroke', '#4a5568')
+          .attr('stroke-width', 2)
+          .attr('rx', 4);
+
+        g.append('text')
+          .attr('x', keyX + nodeWidth / 2)
+          .attr('y', y + nodeHeight / 2)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('fill', 'white')
+          .attr('font-size', '14px')
+          .attr('font-weight', 'bold')
+          .text(key);
       });
 
+      // Draw children recursively
       if (!node.isLeaf && node.children.length > 0) {
         const childWidth = levelWidth / node.children.length;
         const startX = x - levelWidth / 2 + childWidth / 2;
         
         node.children.forEach((child, i) => {
           const childX = startX + i * childWidth;
-          const childNodes = calculateNodePositions(
+          
+          // Draw line to child
+          g.append('line')
+            .attr('x1', x)
+            .attr('y1', y + nodeHeight)
+            .attr('x2', childX)
+            .attr('y2', y + levelHeight)
+            .attr('stroke', '#a0aec0')
+            .attr('stroke-width', 2);
+          
+          calculateNodePositions(
             child,
             childX,
             y + levelHeight,
             childWidth * 0.9
           );
-          nodeData.push(...childNodes);
         });
       }
-
-      return nodeData;
     };
 
-    const treeData = calculateNodePositions(root, 0, 0, width * 0.8);
+    calculateNodePositions(root, 0, 0, width * 0.8);
 
-    // Draw connections
-    const connections = g.append('g').attr('class', 'connections');
-    
-    treeData.forEach(nodeData => {
-      if (!nodeData.node.isLeaf && nodeData.node.children) {
-        nodeData.node.children.forEach((child, i) => {
-          const childData = treeData.find(d => d.node === child);
-          if (childData) {
-            connections.append('line')
-              .attr('class', 'tree-link')
-              .attr('x1', nodeData.x + nodeData.width / 2)
-              .attr('y1', nodeData.y + nodeData.height)
-              .attr('x2', childData.x + childData.width / 2)
-              .attr('y2', childData.y);
-          }
-        });
-      }
-    });
-
-    // Draw nodes
-    const nodes = g.append('g').attr('class', 'nodes');
-
-    treeData.forEach(nodeData => {
-      const nodeGroup = nodes.append('g')
-        .attr('class', 'tree-node')
-        .attr('transform', `translate(${nodeData.x}, ${nodeData.y})`);
-
-      // Draw keys in the node
-      nodeData.node.keys.forEach((key, i) => {
-        const keyX = i * (nodeWidth + 5);
-        
-        let rectClass = 'node-rect';
-        if (highlightedNode === key) {
-          if (operationType === 'search') rectClass += ' searching';
-          else if (operationType === 'delete') rectClass += ' deleting';
-          else if (operationType === 'insert') rectClass += ' splitting';
-        }
-
-        nodeGroup.append('rect')
-          .attr('class', rectClass)
-          .attr('x', keyX)
-          .attr('y', 0)
-          .attr('width', nodeWidth)
-          .attr('height', nodeHeight);
-
-        nodeGroup.append('text')
-          .attr('class', 'node-key')
-          .attr('x', keyX + nodeWidth / 2)
-          .attr('y', nodeHeight / 2)
-          .text(key);
-      });
-    });
-
-    // Add zoom behavior
-    const zoom = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.5, 3])
-      .on('zoom', (event) => {
-        g.attr('transform', `translate(${width / 2}, 50) scale(${event.transform.k})`);
-      });
-
-    svg.call(zoom);
-
-  }, [tree, version, highlightedNode, operationType]);
+  }, [tree]);
 
   return (
-    <div className="tree-container">
-      <svg ref={svgRef} style={{ width: '100%', height: '100%' }}></svg>
-    </div>
+    <svg ref={svgRef} style={{ width: '100%', height: '500px' }}></svg>
   );
 };
 
