@@ -72,10 +72,10 @@ export const BTreePage: React.FC = () => {
   };
   
   return (
-    <div style={{ paddingTop: '80px', height: '100vh' }}>
+    <div style={{ height: '100vh' }}>
       <div style={{ 
         position: 'absolute',
-        top: '90px',
+        top: '80px',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 10,
