@@ -6,7 +6,7 @@ function App() {
   const [tree] = useState(() => {
     const btree = new BTree<number>(3);
     // Add some preset values
-    [10, 20, 5, 6, 12, 30, 7, 17].forEach(val => btree.insert(val));
+    [10, 20, 5, 1, 12, 33, 6, 12, 30, 7, 17].forEach((val) => btree.insert(val));
     return btree;
   });
 
@@ -19,3 +19,4 @@ function App() {
 }
 
 export default App;
+

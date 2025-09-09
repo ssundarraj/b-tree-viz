@@ -24,8 +24,25 @@ const TreeVisualizer: React.FC<TreeVisualizerProps> = ({ tree }) => {
         .attr('font-size', '20px')
         .attr('fill', '#999')
         .text('Empty Tree');
+      console.log('B-Tree Structure: Empty Tree');
       return;
     }
+
+    // Log tree structure to console
+    const logTreeStructure = (node: BTreeNode<number>, depth = 0): void => {
+      const indent = '  '.repeat(depth);
+      console.log(`${indent}Node: [${node.keys.join(', ')}]`);
+      if (!node.isLeaf && node.children.length > 0) {
+        node.children.forEach((child, i) => {
+          console.log(`${indent}  Child ${i}:`);
+          logTreeStructure(child, depth + 2);
+        });
+      }
+    };
+
+    console.log('\n=== B-Tree Structure ===');
+    logTreeStructure(root);
+    console.log('========================\n');
 
     const width = 800;
     const height = 500;
