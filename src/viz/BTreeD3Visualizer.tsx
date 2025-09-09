@@ -34,11 +34,28 @@ export const BTreeD3Visualizer: React.FC<BTreeVisualizerProps> = ({ tree }) => {
   useEffect(() => {
     if (!svgRef.current) return;
 
-    const root = tree.getRoot();
-    if (!root) return;
-
     // Clear previous content
     d3.select(svgRef.current).selectAll('*').remove();
+
+    const root = tree.getRoot();
+    if (!root) {
+      // Show empty tree message
+      const svg = d3.select(svgRef.current)
+        .attr('width', 1200)
+        .attr('height', 600);
+      
+      svg.append('text')
+        .attr('x', 600)
+        .attr('y', 300)
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'middle')
+        .attr('font-size', '24px')
+        .attr('font-family', 'Arial, sans-serif')
+        .attr('fill', '#666')
+        .text('Empty Tree - Insert some values to see the B-tree structure');
+      
+      return;
+    }
 
     const width = 1200;
     const height = 600;
