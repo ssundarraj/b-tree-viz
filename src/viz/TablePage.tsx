@@ -80,6 +80,7 @@ export const TablePage: React.FC = () => {
   const [id, setId] = useState('');
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
+  const [showArrows, setShowArrows] = useState(true);
 
   const handleInsert = () => {
     const idNum = parseInt(id);
@@ -150,6 +151,14 @@ export const TablePage: React.FC = () => {
     setTable([]);
     setIndex(new IndexBTree());
     setMessage('Table and index cleared');
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleReset = () => {
+    const resetData = createInitialData();
+    setTable(resetData.table);
+    setIndex(resetData.index);
+    setMessage('Reset to initial sample data');
     setTimeout(() => setMessage(''), 3000);
   };
 
@@ -255,6 +264,33 @@ export const TablePage: React.FC = () => {
           >
             Clear
           </button>
+          <button
+            onClick={handleReset}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '4px',
+              border: 'none',
+              background: '#2196F3',
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold'
+            }}
+          >
+            Reset
+          </button>
+        </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', fontFamily: 'Arial, sans-serif' }}>
+            <input
+              type="checkbox"
+              checked={showArrows}
+              onChange={(e) => setShowArrows(e.target.checked)}
+              style={{ cursor: 'pointer' }}
+            />
+            Show index arrows
+          </label>
         </div>
         
         {message && (
@@ -286,7 +322,7 @@ export const TablePage: React.FC = () => {
             B-Tree Index → SQL Table Visualization
           </h3>
           <div style={{ height: '600px', border: '2px solid #ddd', borderRadius: '8px', background: 'white' }}>
-            <IndexBTreeVisualizer tree={index} tableData={table} />
+            <IndexBTreeVisualizer tree={index} tableData={table} showArrows={showArrows} />
           </div>
         </div>
       </div>

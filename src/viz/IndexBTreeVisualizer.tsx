@@ -15,6 +15,7 @@ interface TableRow {
 interface IndexBTreeVisualizerProps {
   tree: any; // IndexBTree
   tableData: TableRow[];
+  showArrows?: boolean;
 }
 
 interface D3Node {
@@ -39,7 +40,7 @@ const convertToD3Tree = (node: BTreeNode<IndexPointer> | null, id = 'root'): D3N
   };
 };
 
-export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree, tableData }) => {
+export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree, tableData, showArrows = true }) => {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -207,6 +208,16 @@ export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree
             .attr('stroke-width', 1);
         }
 
+        // Add invisible background for individual key hover detection
+        keyGroup.append('rect')
+          .attr('x', -actualNodeWidth / 2)
+          .attr('y', -keyHeight / 2)
+          .attr('width', actualNodeWidth)
+          .attr('height', keyHeight)
+          .attr('fill', 'transparent')
+          .attr('class', 'key-hover-area')
+          .attr('data-key-id', key.id);
+
         // Add key text (just show the ID)
         keyGroup.append('text')
           .attr('x', 0)
@@ -216,6 +227,7 @@ export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree
           .attr('font-size', '14px')
           .attr('font-weight', 'bold')
           .attr('fill', '#333')
+          .attr('class', 'key-text')
           .text(key.id);
       });
     });
@@ -343,132 +355,136 @@ export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree
         .text(d.name);
     });
 
-    // Add arrow marker definition for arrowheads
-    const defs = svg.append('defs');
-    defs.append('marker')
-      .attr('id', 'arrowhead')
-      .attr('viewBox', '0 -5 10 10')
-      .attr('refX', 8)
-      .attr('refY', 0)
-      .attr('markerWidth', 6)
-      .attr('markerHeight', 6)
-      .attr('orient', 'auto')
-      .append('path')
-      .attr('d', 'M0,-5L10,0L0,5')
-      .attr('fill', '#2196F3')
-      .attr('stroke', '#2196F3');
-
-    // Draw arrows from index entries to table rows
-    const arrows: any[] = [];
+    // Conditionally add arrows if showArrows is true
+    let arrows: any[] = [];
     
-    // Collect all index pointers from the tree
-    nodes.each(function(nodeData) {
-      const node = d3.select(this);
-      const nodeTransform = node.attr('transform');
-      const translateRegex = /translate\(([^,]+),([^)]+)\)/;
-      const match = nodeTransform.match(translateRegex);
-      
-      if (match) {
-        const nodeX = parseFloat(match[1]);
-        const nodeY = parseFloat(match[2]);
-        
-        nodeData.data.keys.forEach((key, keyIndex) => {
-          // Find the corresponding table row
-          const tableRowIndex = tableData.findIndex(row => row.id === key.id);
-          if (tableRowIndex !== -1) {
-            const keyHeight = 30;
-            const actualNodeHeight = nodeData.data.keys.length * keyHeight;
-            
-            // Source point (right edge of index entry)
-            const sourceX = nodeX + 30; // Right edge of node
-            const sourceY = nodeY + (-actualNodeHeight / 2 + keyIndex * keyHeight + keyHeight / 2);
-            
-            // Target point (left edge of table row)
-            const targetX = tableX - 5;
-            const targetY = tableStartY + headerHeight + tableRowIndex * rowHeight + rowHeight / 2;
-            
-            arrows.push({
-              sourceX,
-              sourceY,
-              targetX,
-              targetY,
-              id: key.id
-            });
-          }
-        });
-      }
-    });
+    if (showArrows) {
+      // Add arrow marker definition for arrowheads
+      const defs = svg.append('defs');
+      defs.append('marker')
+        .attr('id', 'arrowhead')
+        .attr('viewBox', '0 -5 10 10')
+        .attr('refX', 8)
+        .attr('refY', 0)
+        .attr('markerWidth', 6)
+        .attr('markerHeight', 6)
+        .attr('orient', 'auto')
+        .append('path')
+        .attr('d', 'M0,-5L10,0L0,5')
+        .attr('fill', '#2196F3')
+        .attr('stroke', '#2196F3');
 
-    // Draw the arrow paths
-    g.selectAll('.index-arrow')
-      .data(arrows)
-      .enter()
-      .append('path')
-      .attr('class', 'index-arrow')
-      .attr('d', d => {
-        const midX = (d.sourceX + d.targetX) / 2;
-        return `M ${d.sourceX},${d.sourceY}
-                C ${midX},${d.sourceY}
-                  ${midX},${d.targetY}
-                  ${d.targetX},${d.targetY}`;
-      })
-      .attr('fill', 'none')
-      .attr('stroke', '#2196F3')
-      .attr('stroke-width', 2)
-      .attr('marker-end', 'url(#arrowhead)')
-      .attr('opacity', 0.7);
-
-    // Add hover effects for B-tree nodes
-    nodes
-      .on('mouseover', function(event, nodeData) {
-        // Highlight the node
-        d3.select(this).select('rect')
-          .attr('fill', '#f0f8ff')
-          .attr('stroke-width', 3);
+      // Collect all index pointers from the tree
+      nodes.each(function(nodeData) {
+        const node = d3.select(this);
+        const nodeTransform = node.attr('transform');
+        const translateRegex = /translate\(([^,]+),([^)]+)\)/;
+        const match = nodeTransform.match(translateRegex);
         
-        // Highlight corresponding table rows and arrows
-        nodeData.data.keys.forEach(key => {
-          // Highlight table row
-          g.selectAll('.table-row')
-            .filter(d => d.id === key.id)
-            .selectAll('rect')
-            .attr('fill', '#fff3cd')
-            .attr('stroke', '#ffc107')
-            .attr('stroke-width', 2);
+        if (match) {
+          const nodeX = parseFloat(match[1]);
+          const nodeY = parseFloat(match[2]);
           
-          // Highlight corresponding arrow
+          nodeData.data.keys.forEach((key, keyIndex) => {
+            // Find the corresponding table row
+            const tableRowIndex = tableData.findIndex(row => row.id === key.id);
+            if (tableRowIndex !== -1) {
+              const keyHeight = 30;
+              const actualNodeHeight = nodeData.data.keys.length * keyHeight;
+              
+              // Source point (right edge of index entry)
+              const sourceX = nodeX + 30; // Right edge of node
+              const sourceY = nodeY + (-actualNodeHeight / 2 + keyIndex * keyHeight + keyHeight / 2);
+              
+              // Target point (left edge of table row)
+              const targetX = tableX - 5;
+              const targetY = tableStartY + headerHeight + tableRowIndex * rowHeight + rowHeight / 2;
+              
+              arrows.push({
+                sourceX,
+                sourceY,
+                targetX,
+                targetY,
+                id: key.id
+              });
+            }
+          });
+        }
+      });
+
+      // Draw the arrow paths
+      g.selectAll('.index-arrow')
+        .data(arrows)
+        .enter()
+        .append('path')
+        .attr('class', 'index-arrow')
+        .attr('d', d => {
+          const midX = (d.sourceX + d.targetX) / 2;
+          return `M ${d.sourceX},${d.sourceY}
+                  C ${midX},${d.sourceY}
+                    ${midX},${d.targetY}
+                    ${d.targetX},${d.targetY}`;
+        })
+        .attr('fill', 'none')
+        .attr('stroke', '#2196F3')
+        .attr('stroke-width', 2)
+        .attr('marker-end', 'url(#arrowhead)')
+        .attr('opacity', 0.7);
+    }
+
+    // Add hover effects for individual keys
+    g.selectAll('.key-hover-area')
+      .on('mouseover', function(event) {
+        const keyId = parseInt(d3.select(this).attr('data-key-id'));
+        
+        // Highlight the key background
+        d3.select(this)
+          .attr('fill', '#f0f8ff')
+          .attr('stroke', '#2196F3')
+          .attr('stroke-width', 2);
+        
+        // Highlight corresponding table row
+        g.selectAll('.table-row')
+          .filter(d => d.id === keyId)
+          .selectAll('rect')
+          .attr('fill', '#fff3cd')
+          .attr('stroke', '#ffc107')
+          .attr('stroke-width', 2);
+        
+        // Highlight corresponding arrow (only if arrows are shown)
+        if (showArrows) {
           g.selectAll('.index-arrow')
-            .filter(d => d.id === key.id)
+            .filter(d => d.id === keyId)
             .attr('stroke', '#ff6b35')
             .attr('stroke-width', 3)
             .attr('opacity', 1);
-        });
+        }
       })
-      .on('mouseout', function(event, nodeData) {
-        // Reset node
-        d3.select(this).select('rect')
-          .attr('fill', 'white')
-          .attr('stroke-width', 2);
+      .on('mouseout', function(event) {
+        const keyId = parseInt(d3.select(this).attr('data-key-id'));
         
-        // Reset table rows and arrows
-        nodeData.data.keys.forEach(key => {
-          const tableRowIndex = tableData.findIndex(row => row.id === key.id);
-          
-          // Reset table row
-          g.selectAll('.table-row')
-            .filter(d => d.id === key.id)
-            .selectAll('rect')
-            .attr('fill', tableRowIndex % 2 === 0 ? '#f8f9fa' : 'white')
-            .attr('stroke', '#eee')
-            .attr('stroke-width', 0.5);
-          
-          // Reset arrow
+        // Reset key background
+        d3.select(this)
+          .attr('fill', 'transparent')
+          .attr('stroke', 'none');
+        
+        // Reset table row
+        const tableRowIndex = tableData.findIndex(row => row.id === keyId);
+        g.selectAll('.table-row')
+          .filter(d => d.id === keyId)
+          .selectAll('rect')
+          .attr('fill', tableRowIndex % 2 === 0 ? '#f8f9fa' : 'white')
+          .attr('stroke', '#eee')
+          .attr('stroke-width', 0.5);
+        
+        // Reset arrow (only if arrows are shown)
+        if (showArrows) {
           g.selectAll('.index-arrow')
-            .filter(d => d.id === key.id)
+            .filter(d => d.id === keyId)
             .attr('stroke', '#2196F3')
             .attr('stroke-width', 2)
             .attr('opacity', 0.7);
-        });
+        }
       });
 
     // Add hover effects for table rows
@@ -480,22 +496,23 @@ export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree
           .attr('stroke', '#ffc107')
           .attr('stroke-width', 2);
         
-        // Highlight corresponding arrows
-        g.selectAll('.index-arrow')
-          .filter(d => d.id === rowData.id)
-          .attr('stroke', '#ff6b35')
-          .attr('stroke-width', 3)
-          .attr('opacity', 1);
+        // Highlight corresponding arrows (only if arrows are shown)
+        if (showArrows) {
+          g.selectAll('.index-arrow')
+            .filter(d => d.id === rowData.id)
+            .attr('stroke', '#ff6b35')
+            .attr('stroke-width', 3)
+            .attr('opacity', 1);
+        }
         
-        // Highlight corresponding index entries
-        nodes.each(function(nodeData) {
-          const hasKey = nodeData.data.keys.some(key => key.id === rowData.id);
-          if (hasKey) {
-            d3.select(this).select('rect')
-              .attr('fill', '#f0f8ff')
-              .attr('stroke-width', 3);
-          }
-        });
+        // Highlight corresponding index key
+        g.selectAll('.key-hover-area')
+          .filter(function() {
+            return parseInt(d3.select(this).attr('data-key-id')) === rowData.id;
+          })
+          .attr('fill', '#f0f8ff')
+          .attr('stroke', '#2196F3')
+          .attr('stroke-width', 2);
       })
       .on('mouseout', function(event, rowData) {
         const tableRowIndex = tableData.findIndex(row => row.id === rowData.id);
@@ -506,22 +523,22 @@ export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree
           .attr('stroke', '#eee')
           .attr('stroke-width', 0.5);
         
-        // Reset arrows
-        g.selectAll('.index-arrow')
-          .filter(d => d.id === rowData.id)
-          .attr('stroke', '#2196F3')
-          .attr('stroke-width', 2)
-          .attr('opacity', 0.7);
+        // Reset arrows (only if arrows are shown)
+        if (showArrows) {
+          g.selectAll('.index-arrow')
+            .filter(d => d.id === rowData.id)
+            .attr('stroke', '#2196F3')
+            .attr('stroke-width', 2)
+            .attr('opacity', 0.7);
+        }
         
-        // Reset index nodes
-        nodes.each(function(nodeData) {
-          const hasKey = nodeData.data.keys.some(key => key.id === rowData.id);
-          if (hasKey) {
-            d3.select(this).select('rect')
-              .attr('fill', 'white')
-              .attr('stroke-width', 2);
-          }
-        });
+        // Reset index key
+        g.selectAll('.key-hover-area')
+          .filter(function() {
+            return parseInt(d3.select(this).attr('data-key-id')) === rowData.id;
+          })
+          .attr('fill', 'transparent')
+          .attr('stroke', 'none');
       });
 
     // Center the tree initially
@@ -541,7 +558,7 @@ export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree
       );
     }
 
-  }, [tree, tableData]);
+  }, [tree, tableData, showArrows]);
 
   return (
     <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
