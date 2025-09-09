@@ -90,11 +90,48 @@ export const BTreeD3Visualizer: React.FC<BTreeVisualizerProps> = ({ tree }) => {
     const treeLayout = d3.tree<D3Node>()
       .size([height - 100, width - 200])
       .separation((a, b) => {
-        return a.parent === b.parent ? 1 : 1.5;
+        // Calculate separation based on node heights
+        const aHeight = a.data.keys.length * 30;
+        const bHeight = b.data.keys.length * 30;
+        const maxHeight = Math.max(aHeight, bHeight);
+        // Use a multiplier based on node size
+        const baseSeparation = maxHeight / 30; // Scale factor
+        return a.parent === b.parent ? baseSeparation : baseSeparation * 1.5;
       });
 
     // Generate the tree structure
     const treeData = treeLayout(hierarchyRoot);
+    
+    // Adjust positions to prevent overlap
+    const nodesByLevel: Array<Array<any>> = [];
+    treeData.descendants().forEach(node => {
+      const level = node.depth;
+      if (!nodesByLevel[level]) nodesByLevel[level] = [];
+      nodesByLevel[level].push(node);
+    });
+
+    // Adjust vertical spacing within each level
+    nodesByLevel.forEach(level => {
+      level.sort((a, b) => a.x! - b.x!);
+      
+      for (let i = 1; i < level.length; i++) {
+        const prevNode = level[i - 1];
+        const currNode = level[i];
+        
+        const prevHeight = prevNode.data.keys.length * 30;
+        const currHeight = currNode.data.keys.length * 30;
+        const minSpacing = (prevHeight + currHeight) / 2 + 40; // 40px buffer
+        
+        const requiredY = prevNode.x! + minSpacing;
+        if (currNode.x! < requiredY) {
+          const adjustment = requiredY - currNode.x!;
+          // Shift this node and all subsequent nodes down
+          for (let j = i; j < level.length; j++) {
+            level[j].x! += adjustment;
+          }
+        }
+      }
+    });
 
     // Draw links (connections between nodes)
     const links = g.selectAll('.link')
