@@ -169,10 +169,10 @@ export const TablePage: React.FC = () => {
   };
 
   return (
-    <div style={{ paddingTop: '80px', minHeight: '100vh', background: '#f5f5f5' }}>
+    <div style={{ height: '100vh' }}>
       <div style={{ 
         position: 'absolute',
-        top: '90px',
+        top: '80px',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 10,
@@ -306,26 +306,7 @@ export const TablePage: React.FC = () => {
         )}
       </div>
       
-      <div style={{ 
-        display: 'flex',
-        justifyContent: 'center',
-        paddingTop: '200px',
-        paddingBottom: '50px'
-      }}>
-        <div style={{ width: '100%', maxWidth: '1400px' }}>
-          <h3 style={{ 
-            textAlign: 'center', 
-            fontFamily: 'Arial, sans-serif',
-            marginBottom: '20px',
-            color: '#333'
-          }}>
-            B-Tree Index → SQL Table Visualization
-          </h3>
-          <div style={{ height: '600px', border: '2px solid #ddd', borderRadius: '8px', background: 'white' }}>
-            <IndexBTreeVisualizer tree={index} tableData={table} showArrows={showArrows} />
-          </div>
-        </div>
-      </div>
+      <IndexBTreeVisualizer tree={index} tableData={table} showArrows={showArrows} />
     </div>
   );
 };

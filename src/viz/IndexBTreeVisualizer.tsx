@@ -50,11 +50,12 @@ export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree
     d3.select(svgRef.current).selectAll('*').remove();
 
     const root = tree.getRoot();
-    const width = 1200;
-    const height = 500;
-    const treeWidth = 700;
-    const tableX = treeWidth + 50;
-    const tableWidth = 400;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const treeWidth = Math.min(700, width * 0.5);
+    const availableRightSpace = width - treeWidth - 100; // Space for table area
+    const tableWidth = Math.min(350, availableRightSpace * 0.8);
+    const tableX = treeWidth + 100 + (availableRightSpace - tableWidth) / 2; // Center table in right area
 
     if (!root) {
       // Show empty tree message
@@ -97,16 +98,17 @@ export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree
 
     const hierarchyRoot = d3.hierarchy(d3TreeData);
     
-    // Create tree layout (horizontal) - constrained to left side
+    // Create tree layout (horizontal) - constrained to left side with reasonable height
+    const maxTreeHeight = Math.min(400, height * 0.6); // Limit tree height to 60% of viewport or 400px
     const treeLayout = d3.tree<D3Node>()
-      .size([height - 100, treeWidth - 150])
+      .size([maxTreeHeight, treeWidth - 150])
       .separation((a, b) => {
         // Calculate separation based on node heights
         const aHeight = a.data.keys.length * 30;
         const bHeight = b.data.keys.length * 30;
         const maxHeight = Math.max(aHeight, bHeight);
-        const baseSeparation = maxHeight / 30;
-        return a.parent === b.parent ? baseSeparation : baseSeparation * 1.5;
+        const baseSeparation = Math.max(1, maxHeight / 30);
+        return a.parent === b.parent ? baseSeparation : baseSeparation * 1.2;
       });
 
     // Generate the tree structure
@@ -235,7 +237,7 @@ export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree
     // Render SQL Table
     const rowHeight = 35;
     const headerHeight = 40;
-    const tableStartY = 50;
+    const tableStartY = Math.max(100, (height - (headerHeight + tableData.length * rowHeight)) / 2);
     
     // Table background
     g.append('rect')
@@ -397,7 +399,7 @@ export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree
               const sourceY = nodeY + (-actualNodeHeight / 2 + keyIndex * keyHeight + keyHeight / 2);
               
               // Target point (left edge of table row)
-              const targetX = tableX - 5;
+              const targetX = tableX - 10;
               const targetY = tableStartY + headerHeight + tableRowIndex * rowHeight + rowHeight / 2;
               
               arrows.push({
@@ -561,8 +563,8 @@ export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree
   }, [tree, tableData, showArrows]);
 
   return (
-    <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
-      <svg ref={svgRef} style={{ width: '100%', height: '100%', background: '#f9f9f9' }} />
+    <div style={{ width: '100%', height: '100vh', overflow: 'hidden' }}>
+      <svg ref={svgRef} style={{ width: '100%', height: '100%', background: '#f5f5f5' }} />
     </div>
   );
 };
