@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BTreeD3Visualizer, createSampleTree } from './BTreeD3Visualizer';
 import { BTree } from '../btree';
+import { ControlPanel, ControlButton, ControlInput } from './components/ControlPanel';
 
 export const BTreePage: React.FC = () => {
   const [tree, setTree] = useState(() => createSampleTree());
@@ -70,119 +71,32 @@ export const BTreePage: React.FC = () => {
       handleInsert();
     }
   };
-  
+
   return (
     <div style={{ height: '100vh' }}>
-      <div style={{ 
-        position: 'absolute',
-        top: '80px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 10,
-        background: 'rgba(255, 255, 255, 0.95)',
-        padding: '15px 20px',
-        borderRadius: '8px',
-        fontFamily: 'Arial, sans-serif',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '10px'
-      }}>
-        <h2 style={{ margin: 0, fontSize: '18px' }}>
-          B-Tree Visualizer (Order 4)
-        </h2>
-        
+      <ControlPanel title="B-Tree Visualizer (Order 4)" message={message}>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <input
-            type="text"
+          <ControlInput
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={setInputValue}
             onKeyPress={handleKeyPress}
             placeholder="Enter a number"
-            style={{
-              padding: '6px 10px',
-              borderRadius: '4px',
-              border: '1px solid #ccc',
-              fontSize: '14px',
-              width: '120px'
-            }}
           />
-          <button
-            onClick={handleInsert}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '4px',
-              border: 'none',
-              background: '#4CAF50',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 'bold'
-            }}
-          >
+          <ControlButton onClick={handleInsert} color="green">
             Insert
-          </button>
-          <button
-            onClick={handleDelete}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '4px',
-              border: 'none',
-              background: '#f44336',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 'bold'
-            }}
-          >
+          </ControlButton>
+          <ControlButton onClick={handleDelete} color="red">
             Delete
-          </button>
-          <button
-            onClick={handleClear}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '4px',
-              border: 'none',
-              background: '#FF9800',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 'bold'
-            }}
-          >
+          </ControlButton>
+          <ControlButton onClick={handleClear} color="orange">
             Clear
-          </button>
-          <button
-            onClick={handleReset}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '4px',
-              border: 'none',
-              background: '#2196F3',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 'bold'
-            }}
-          >
+          </ControlButton>
+          <ControlButton onClick={handleReset} color="blue">
             Reset
-          </button>
+          </ControlButton>
         </div>
-        
-        {message && (
-          <div style={{
-            padding: '4px 8px',
-            borderRadius: '4px',
-            background: '#e3f2fd',
-            color: '#1976d2',
-            fontSize: '13px'
-          }}>
-            {message}
-          </div>
-        )}
-      </div>
-      
+      </ControlPanel>
+
       <BTreeD3Visualizer tree={tree} />
     </div>
   );

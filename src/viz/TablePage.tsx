@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BTree } from '../btree';
 import { IndexBTreeVisualizer } from './IndexBTreeVisualizer';
+import { ControlPanel, ControlButton, ControlInput } from './components/ControlPanel';
 
 interface TableRow {
   id: number;
@@ -170,117 +171,35 @@ export const TablePage: React.FC = () => {
 
   return (
     <div style={{ height: '100vh' }}>
-      <div style={{ 
-        position: 'absolute',
-        top: '80px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 10,
-        background: 'rgba(255, 255, 255, 0.95)',
-        padding: '15px 20px',
-        borderRadius: '8px',
-        fontFamily: 'Arial, sans-serif',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '10px'
-      }}>
-        <h2 style={{ margin: 0, fontSize: '18px' }}>
-          SQL Table with B-Tree Index
-        </h2>
-        
+      <ControlPanel title="SQL Table with B-Tree Index" message={message}>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <input
-            type="text"
+          <ControlInput
             value={id}
-            onChange={(e) => setId(e.target.value)}
+            onChange={setId}
             onKeyPress={handleKeyPress}
             placeholder="ID (number)"
-            style={{
-              padding: '6px 10px',
-              borderRadius: '4px',
-              border: '1px solid #ccc',
-              fontSize: '14px',
-              width: '100px'
-            }}
+            width={100}
           />
-          <input
-            type="text"
+          <ControlInput
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={setName}
             onKeyPress={handleKeyPress}
             placeholder="Name"
-            style={{
-              padding: '6px 10px',
-              borderRadius: '4px',
-              border: '1px solid #ccc',
-              fontSize: '14px',
-              width: '120px'
-            }}
           />
-          <button
-            onClick={handleInsert}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '4px',
-              border: 'none',
-              background: '#4CAF50',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 'bold'
-            }}
-          >
+          <ControlButton onClick={handleInsert} color="green">
             Insert
-          </button>
-          <button
-            onClick={handleDelete}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '4px',
-              border: 'none',
-              background: '#f44336',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 'bold'
-            }}
-          >
+          </ControlButton>
+          <ControlButton onClick={handleDelete} color="red">
             Delete
-          </button>
-          <button
-            onClick={handleClear}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '4px',
-              border: 'none',
-              background: '#FF9800',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 'bold'
-            }}
-          >
+          </ControlButton>
+          <ControlButton onClick={handleClear} color="orange">
             Clear
-          </button>
-          <button
-            onClick={handleReset}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '4px',
-              border: 'none',
-              background: '#2196F3',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 'bold'
-            }}
-          >
+          </ControlButton>
+          <ControlButton onClick={handleReset} color="blue">
             Reset
-          </button>
+          </ControlButton>
         </div>
-        
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', fontFamily: 'Arial, sans-serif' }}>
             <input
@@ -292,20 +211,8 @@ export const TablePage: React.FC = () => {
             Show index arrows
           </label>
         </div>
-        
-        {message && (
-          <div style={{
-            padding: '4px 8px',
-            borderRadius: '4px',
-            background: '#e3f2fd',
-            color: '#1976d2',
-            fontSize: '13px'
-          }}>
-            {message}
-          </div>
-        )}
-      </div>
-      
+      </ControlPanel>
+
       <IndexBTreeVisualizer tree={index} tableData={table} showArrows={showArrows} />
     </div>
   );

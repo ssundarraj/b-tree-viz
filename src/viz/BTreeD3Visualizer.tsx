@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import { BTree, BTreeNode } from '../btree';
+import { useD3Zoom } from './hooks/useD3Zoom';
 
 interface BTreeVisualizerProps {
   tree: BTree<number>;
@@ -30,29 +31,19 @@ const convertToD3Tree = (node: BTreeNode<number> | null, id = 'root'): D3Node | 
 
 export const BTreeD3Visualizer: React.FC<BTreeVisualizerProps> = ({ tree }) => {
   const svgRef = useRef<SVGSVGElement>(null);
-  const currentTransformRef = useRef<d3.ZoomTransform | null>(null);
+  const { setupZoom, applyInitialTransform } = useD3Zoom({ svgRef, initialOffset: 100 });
 
   useEffect(() => {
     if (!svgRef.current) return;
 
     const svg = d3.select(svgRef.current);
-
-    // Store current transform before clearing
-    const existingTransform = d3.zoomTransform(svgRef.current);
-    if (existingTransform.k !== 1 || existingTransform.x !== 0 || existingTransform.y !== 0) {
-      currentTransformRef.current = existingTransform;
-    }
-
-    // Clear previous content
     svg.selectAll('*').remove();
 
     const root = tree.getRoot();
     if (!root) {
-      // Show empty tree message
-      const svg = d3.select(svgRef.current)
-        .attr('width', 1200)
+      svg.attr('width', 1200)
         .attr('height', 600);
-      
+
       svg.append('text')
         .attr('x', 600)
         .attr('y', 300)
@@ -62,7 +53,7 @@ export const BTreeD3Visualizer: React.FC<BTreeVisualizerProps> = ({ tree }) => {
         .attr('font-family', 'Arial, sans-serif')
         .attr('fill', '#666')
         .text('Empty Tree - Insert some values to see the B-tree structure');
-      
+
       return;
     }
 
@@ -76,19 +67,8 @@ export const BTreeD3Visualizer: React.FC<BTreeVisualizerProps> = ({ tree }) => {
     svg.attr('width', width)
       .attr('height', height);
 
-    // Create container for zoom/pan
     const g = svg.append('g');
-
-    // Add zoom behavior
-    const zoom = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.1, 3])
-      .on('zoom', (event) => {
-        g.attr('transform', event.transform);
-        // Save the transform for next update
-        currentTransformRef.current = event.transform;
-      });
-
-    svg.call(zoom);
+    const zoom = setupZoom(svg, g);
 
     // Convert BTree to D3 hierarchy
     const d3TreeData = convertToD3Tree(root);
@@ -237,35 +217,7 @@ export const BTreeD3Visualizer: React.FC<BTreeVisualizerProps> = ({ tree }) => {
           .attr('stroke-width', 2);
       });
 
-    // Apply existing transform or center the tree initially
-    if (currentTransformRef.current) {
-      // Restore the saved transform
-      svg.call(
-        zoom.transform as any,
-        currentTransformRef.current
-      );
-    } else {
-      // Center the tree initially, but offset it down to avoid controls
-      const bounds = g.node()?.getBBox();
-      if (bounds) {
-        const fullWidth = bounds.width;
-        const fullHeight = bounds.height;
-        const midX = bounds.x + fullWidth / 2;
-        const midY = bounds.y + fullHeight / 2;
-
-        const scale = 0.8 * Math.min(width / fullWidth, height / fullHeight);
-        // Add 100px vertical offset to move tree below the controls
-        const verticalOffset = 100;
-        const translate = [width / 2 - scale * midX, (height / 2 - scale * midY) + verticalOffset];
-
-        const initialTransform = d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale);
-        svg.call(
-          zoom.transform as any,
-          initialTransform
-        );
-        currentTransformRef.current = initialTransform;
-      }
-    }
+    applyInitialTransform(svg, g, zoom, { width, height });
 
   }, [tree]);
 
