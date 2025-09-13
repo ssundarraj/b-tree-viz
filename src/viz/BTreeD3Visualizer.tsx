@@ -191,6 +191,16 @@ export const BTreeD3Visualizer: React.FC<BTreeVisualizerProps> = ({ tree }) => {
             .attr('stroke-width', 1);
         }
 
+        // Add invisible background for individual key hover detection
+        keyGroup.append('rect')
+          .attr('x', -actualNodeWidth / 2)
+          .attr('y', -keyHeight / 2)
+          .attr('width', actualNodeWidth)
+          .attr('height', keyHeight)
+          .attr('fill', 'transparent')
+          .attr('class', 'key-hover-area')
+          .attr('data-key-value', key);
+
         // Add key text
         keyGroup.append('text')
           .attr('x', 0)
@@ -200,21 +210,27 @@ export const BTreeD3Visualizer: React.FC<BTreeVisualizerProps> = ({ tree }) => {
           .attr('font-size', '14px')
           .attr('font-weight', 'bold')
           .attr('fill', '#333')
+          .attr('class', 'key-text')
           .text(key);
       });
     });
 
-    // Add hover effects
-    nodes
-      .on('mouseover', function() {
-        d3.select(this).select('rect')
+    // Add hover effects for individual keys
+    g.selectAll('.key-hover-area')
+      .on('mouseover', function(event) {
+        const keyValue = d3.select(this).attr('data-key-value');
+
+        // Highlight the key background
+        d3.select(this)
           .attr('fill', '#f0f8ff')
-          .attr('stroke-width', 3);
-      })
-      .on('mouseout', function() {
-        d3.select(this).select('rect')
-          .attr('fill', 'white')
+          .attr('stroke', '#2196F3')
           .attr('stroke-width', 2);
+      })
+      .on('mouseout', function(event) {
+        // Reset key background
+        d3.select(this)
+          .attr('fill', 'transparent')
+          .attr('stroke', 'none');
       });
 
     applyInitialTransform(svg, g, zoom, { width, height });
