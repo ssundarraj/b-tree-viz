@@ -6,7 +6,7 @@ import { TablePage } from './TablePage';
 
 const App: React.FC = () => {
   return (
-    <Router>
+    <Router basename="/b-tree-viz">
       <div className="app">
         <Navigation />
         <Routes>
