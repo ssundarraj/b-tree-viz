@@ -1,33 +1,21 @@
 import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
-import { BTree, BTreeNode } from '../btree';
+import { BTree } from '../btree';
 import { useD3Zoom } from './hooks/useD3Zoom';
+import {
+  convertToD3Tree,
+  createBTreeLayout,
+  adjustNodePositions,
+  drawBTreeLinks,
+  renderNodeKeys,
+  addKeyHoverEffects,
+  DEFAULT_BTREE_CONFIG
+} from './d3-btree-utils';
 
 interface BTreeVisualizerProps {
   tree: BTree<number>;
 }
 
-interface D3Node {
-  id: string;
-  keys: number[];
-  isLeaf: boolean;
-  children: D3Node[];
-  x?: number;
-  y?: number;
-}
-
-const convertToD3Tree = (node: BTreeNode<number> | null, id = 'root'): D3Node | null => {
-  if (!node) return null;
-  
-  return {
-    id,
-    keys: node.keys,
-    isLeaf: node.isLeaf,
-    children: node.children.map((child, i) => 
-      convertToD3Tree(child, `${id}-${i}`)
-    ).filter(Boolean) as D3Node[]
-  };
-};
 
 export const BTreeD3Visualizer: React.FC<BTreeVisualizerProps> = ({ tree }) => {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -59,10 +47,6 @@ export const BTreeD3Visualizer: React.FC<BTreeVisualizerProps> = ({ tree }) => {
 
     const width = svgRef.current.clientWidth || 1200;
     const height = svgRef.current.clientHeight || 600;
-    const nodeWidth = 80;
-    const nodeHeight = 40;
-    const levelSeparation = 180;
-    const nodeSeparation = 20;
 
     svg.attr('width', width)
       .attr('height', height);
@@ -70,81 +54,21 @@ export const BTreeD3Visualizer: React.FC<BTreeVisualizerProps> = ({ tree }) => {
     const g = svg.append('g');
     const zoom = setupZoom(svg, g);
 
-    // Convert BTree to D3 hierarchy
+    // Convert BTree to D3 hierarchy using shared utility
     const d3TreeData = convertToD3Tree(root);
     if (!d3TreeData) return;
 
     const hierarchyRoot = d3.hierarchy(d3TreeData);
-    
-    // Create tree layout (horizontal)
-    const treeLayout = d3.tree<D3Node>()
-      .size([height - 100, width - 200])
-      .separation((a, b) => {
-        // Calculate separation based on node heights
-        const aHeight = a.data.keys.length * 30;
-        const bHeight = b.data.keys.length * 30;
-        const maxHeight = Math.max(aHeight, bHeight);
-        // Use a multiplier based on node size
-        const baseSeparation = maxHeight / 30; // Scale factor
-        return a.parent === b.parent ? baseSeparation : baseSeparation * 1.5;
-      });
 
-    // Generate the tree structure
+    // Create tree layout using shared utility
+    const treeLayout = createBTreeLayout<number>(width, height, { nodeWidth: 50 });
     const treeData = treeLayout(hierarchyRoot);
-    
-    // Adjust positions to prevent overlap
-    const nodesByLevel: Array<Array<any>> = [];
-    treeData.descendants().forEach(node => {
-      const level = node.depth;
-      if (!nodesByLevel[level]) nodesByLevel[level] = [];
-      nodesByLevel[level].push(node);
-    });
 
-    // Adjust vertical spacing within each level
-    nodesByLevel.forEach(level => {
-      level.sort((a, b) => a.x! - b.x!);
-      
-      for (let i = 1; i < level.length; i++) {
-        const prevNode = level[i - 1];
-        const currNode = level[i];
-        
-        const prevHeight = prevNode.data.keys.length * 30;
-        const currHeight = currNode.data.keys.length * 30;
-        const minSpacing = (prevHeight + currHeight) / 2 + 40; // 40px buffer
-        
-        const requiredY = prevNode.x! + minSpacing;
-        if (currNode.x! < requiredY) {
-          const adjustment = requiredY - currNode.x!;
-          // Shift this node and all subsequent nodes down
-          for (let j = i; j < level.length; j++) {
-            level[j].x! += adjustment;
-          }
-        }
-      }
-    });
+    // Adjust positions using shared utility
+    adjustNodePositions(treeData);
 
-    // Draw links (connections between nodes)
-    const links = g.selectAll('.link')
-      .data(treeData.links())
-      .enter()
-      .append('path')
-      .attr('class', 'link')
-      .attr('d', d => {
-        // Swap x and y for horizontal layout
-        const sourceX = d.source.y! + 50;
-        const sourceY = d.source.x!;
-        const targetX = d.target.y! + 50;
-        const targetY = d.target.x!;
-        
-        // Create curved path
-        return `M ${sourceX},${sourceY}
-                C ${(sourceX + targetX) / 2},${sourceY}
-                  ${(sourceX + targetX) / 2},${targetY}
-                  ${targetX},${targetY}`;
-      })
-      .attr('fill', 'none')
-      .attr('stroke', '#666')
-      .attr('stroke-width', 2);
+    // Draw links using shared utility
+    drawBTreeLinks(g, treeData);
 
     // Draw nodes
     const nodes = g.selectAll('.node')
@@ -154,84 +78,14 @@ export const BTreeD3Visualizer: React.FC<BTreeVisualizerProps> = ({ tree }) => {
       .attr('class', 'node')
       .attr('transform', d => `translate(${d.y! + 50},${d.x!})`);
 
-    // Calculate node dimensions based on number of keys (vertical layout)
-    nodes.each(function(d) {
-      const nodeData = d.data;
-      const keyCount = nodeData.keys.length;
-      const keyHeight = 30;
-      const actualNodeHeight = keyCount * keyHeight;
-      const actualNodeWidth = 50;
-      
-      // Add rectangle for node background
-      d3.select(this)
-        .append('rect')
-        .attr('x', -actualNodeWidth / 2)
-        .attr('y', -actualNodeHeight / 2)
-        .attr('width', actualNodeWidth)
-        .attr('height', actualNodeHeight)
-        .attr('fill', 'white')
-        .attr('stroke', '#333')
-        .attr('stroke-width', 2)
-        .attr('rx', 4);
-
-      // Add keys as separate boxes within the node (vertically stacked)
-      nodeData.keys.forEach((key, i) => {
-        const keyGroup = d3.select(this)
-          .append('g')
-          .attr('transform', `translate(0,${-actualNodeHeight / 2 + i * keyHeight + keyHeight / 2})`);
-
-        // Add key separator lines (horizontal now)
-        if (i > 0) {
-          keyGroup.append('line')
-            .attr('x1', -actualNodeWidth / 2)
-            .attr('y1', -keyHeight / 2)
-            .attr('x2', actualNodeWidth / 2)
-            .attr('y2', -keyHeight / 2)
-            .attr('stroke', '#ccc')
-            .attr('stroke-width', 1);
-        }
-
-        // Add invisible background for individual key hover detection
-        keyGroup.append('rect')
-          .attr('x', -actualNodeWidth / 2)
-          .attr('y', -keyHeight / 2)
-          .attr('width', actualNodeWidth)
-          .attr('height', keyHeight)
-          .attr('fill', 'transparent')
-          .attr('class', 'key-hover-area')
-          .attr('data-key-value', key);
-
-        // Add key text
-        keyGroup.append('text')
-          .attr('x', 0)
-          .attr('y', 0)
-          .attr('text-anchor', 'middle')
-          .attr('dominant-baseline', 'middle')
-          .attr('font-size', '14px')
-          .attr('font-weight', 'bold')
-          .attr('fill', '#333')
-          .attr('class', 'key-text')
-          .text(key);
-      });
+    // Render node keys using shared utility
+    renderNodeKeys(nodes, { nodeWidth: 50 }, {
+      getKeyDisplay: (key) => key.toString(),
+      getKeyId: (key) => key.toString()
     });
 
-    // Add hover effects for individual keys
-    g.selectAll('.key-hover-area')
-      .on('mouseover', function(event) {
-        const keyValue = d3.select(this).attr('data-key-value');
-
-        // Highlight the key background
-        d3.select(this)
-          .attr('fill', '#f0f8ff')
-          .attr('stroke', '#2196F3')
-          .attr('stroke-width', 2);
-      })
-      .on('mouseout', function(event) {
-        // Reset key background
-        d3.select(this)
-          .attr('fill', 'transparent')
-          .attr('stroke', 'none');
-      });
+    // Add hover effects using shared utility
+    addKeyHoverEffects(g);
 
     applyInitialTransform(svg, g, zoom, { width, height });
 
