@@ -42,12 +42,21 @@ const convertToD3Tree = (node: BTreeNode<IndexPointer> | null, id = 'root'): D3N
 
 export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree, tableData, showArrows = true }) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const currentTransformRef = useRef<d3.ZoomTransform | null>(null);
 
   useEffect(() => {
     if (!svgRef.current) return;
 
+    const svg = d3.select(svgRef.current);
+
+    // Store current transform before clearing
+    const existingTransform = d3.zoomTransform(svgRef.current);
+    if (existingTransform.k !== 1 || existingTransform.x !== 0 || existingTransform.y !== 0) {
+      currentTransformRef.current = existingTransform;
+    }
+
     // Clear previous content
-    d3.select(svgRef.current).selectAll('*').remove();
+    svg.selectAll('*').remove();
 
     const root = tree.getRoot();
     const width = window.innerWidth;
@@ -76,8 +85,7 @@ export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree
       return;
     }
 
-    const svg = d3.select(svgRef.current)
-      .attr('width', width)
+    svg.attr('width', width)
       .attr('height', height);
 
     // Create container for zoom/pan
@@ -88,6 +96,8 @@ export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree
       .scaleExtent([0.1, 3])
       .on('zoom', (event) => {
         g.attr('transform', event.transform);
+        // Save the transform for next update
+        currentTransformRef.current = event.transform;
       });
 
     svg.call(zoom);
@@ -543,21 +553,34 @@ export const IndexBTreeVisualizer: React.FC<IndexBTreeVisualizerProps> = ({ tree
           .attr('stroke', 'none');
       });
 
-    // Center the tree initially
-    const bounds = g.node()?.getBBox();
-    if (bounds) {
-      const fullWidth = bounds.width;
-      const fullHeight = bounds.height;
-      const midX = bounds.x + fullWidth / 2;
-      const midY = bounds.y + fullHeight / 2;
-      
-      const scale = 0.8 * Math.min(width / fullWidth, height / fullHeight);
-      const translate = [width / 2 - scale * midX, height / 2 - scale * midY];
-      
+    // Apply existing transform or center the tree initially
+    if (currentTransformRef.current) {
+      // Restore the saved transform
       svg.call(
         zoom.transform as any,
-        d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
+        currentTransformRef.current
       );
+    } else {
+      // Center the tree initially, but offset it down to avoid controls
+      const bounds = g.node()?.getBBox();
+      if (bounds) {
+        const fullWidth = bounds.width;
+        const fullHeight = bounds.height;
+        const midX = bounds.x + fullWidth / 2;
+        const midY = bounds.y + fullHeight / 2;
+
+        const scale = 0.8 * Math.min(width / fullWidth, height / fullHeight);
+        // Add 100px vertical offset to move content below the controls
+        const verticalOffset = 100;
+        const translate = [width / 2 - scale * midX, (height / 2 - scale * midY) + verticalOffset];
+
+        const initialTransform = d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale);
+        svg.call(
+          zoom.transform as any,
+          initialTransform
+        );
+        currentTransformRef.current = initialTransform;
+      }
     }
 
   }, [tree, tableData, showArrows]);
