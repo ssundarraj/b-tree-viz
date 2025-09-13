@@ -13,6 +13,7 @@ const App: React.FC = () => {
           <Route path="/btree" element={<BTreePage />} />
           <Route path="/table" element={<TablePage />} />
           <Route path="/" element={<Navigate to="/btree" replace />} />
+          <Route path="*" element={<Navigate to="/btree" replace />} />
         </Routes>
       </div>
     </Router>
