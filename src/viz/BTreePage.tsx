@@ -2,11 +2,20 @@ import React, { useState } from 'react';
 import { BTreeD3Visualizer, createSampleTree } from './BTreeD3Visualizer';
 import { BTree } from '../btree';
 import { ControlPanel, ControlButton, ControlInput } from './components/ControlPanel';
+import { BST } from './BST';
+import { BSTVisualizer } from './BSTVisualizer';
 
 export const BTreePage: React.FC = () => {
   const [tree, setTree] = useState(() => createSampleTree());
   const [inputValue, setInputValue] = useState('');
   const [message, setMessage] = useState('');
+  const [showComparison, setShowComparison] = useState(false);
+  const [bst, setBst] = useState<BST<number>>(() => {
+    const values = createSampleTree()
+      .traverse()
+      .sort((a, b) => a - b);
+    return BST.fromSortedArray(values);
+  });
 
   const handleInsert = () => {
     const value = parseInt(inputValue);
@@ -15,14 +24,19 @@ export const BTreePage: React.FC = () => {
       setTimeout(() => setMessage(''), 3000);
       return;
     }
-    
+
     const newTree = new BTree<number>(4);
     // Copy existing tree values
     const values = tree.traverse();
-    values.forEach(v => newTree.insert(v));
+    values.forEach((v) => newTree.insert(v));
     // Insert new value
     newTree.insert(value);
     setTree(newTree);
+
+    // Update BST with new values
+    const sortedValues = [...values, value].sort((a, b) => a - b);
+    setBst(BST.fromSortedArray(sortedValues));
+
     setInputValue('');
     setMessage(`Inserted ${value}`);
     setTimeout(() => setMessage(''), 3000);
@@ -35,20 +49,26 @@ export const BTreePage: React.FC = () => {
       setTimeout(() => setMessage(''), 3000);
       return;
     }
-    
+
     const newTree = new BTree<number>(4);
     // Copy existing tree values except the one to delete
     const values = tree.traverse();
     const deleted = values.includes(value);
-    
+
     if (!deleted) {
       setMessage(`Value ${value} not found in tree`);
       setTimeout(() => setMessage(''), 3000);
       return;
     }
-    
-    values.filter(v => v !== value).forEach(v => newTree.insert(v));
+
+    const newValues = values.filter((v) => v !== value);
+    newValues.forEach((v) => newTree.insert(v));
     setTree(newTree);
+
+    // Update BST with remaining values
+    const sortedValues = newValues.sort((a, b) => a - b);
+    setBst(BST.fromSortedArray(sortedValues));
+
     setInputValue('');
     setMessage(`Deleted ${value}`);
     setTimeout(() => setMessage(''), 3000);
@@ -56,12 +76,18 @@ export const BTreePage: React.FC = () => {
 
   const handleClear = () => {
     setTree(new BTree<number>(4));
+    setBst(new BST<number>());
     setMessage('Tree cleared');
     setTimeout(() => setMessage(''), 3000);
   };
 
   const handleReset = () => {
-    setTree(createSampleTree());
+    const sampleTree = createSampleTree();
+    setTree(sampleTree);
+
+    const values = sampleTree.traverse().sort((a, b) => a - b);
+    setBst(BST.fromSortedArray(values));
+
     setMessage('Tree reset to sample');
     setTimeout(() => setMessage(''), 3000);
   };
@@ -74,8 +100,8 @@ export const BTreePage: React.FC = () => {
 
   return (
     <div style={{ height: '100vh' }}>
-      <ControlPanel title="B-Tree Visualizer (Order 4)" message={message}>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      <ControlPanel title="B-Tree vs BST Comparison" message={message}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <ControlInput
             value={inputValue}
             onChange={setInputValue}
@@ -95,9 +121,79 @@ export const BTreePage: React.FC = () => {
             Reset
           </ControlButton>
         </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '14px',
+              fontFamily: 'Arial, sans-serif',
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={showComparison}
+              onChange={(e) => setShowComparison(e.target.checked)}
+              style={{ cursor: 'pointer' }}
+            />
+            BST Comparison
+          </label>
+        </div>
       </ControlPanel>
 
-      <BTreeD3Visualizer tree={tree} />
+      {showComparison ? (
+        <div style={{ display: 'flex', height: '100vh' }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <div
+              style={{
+                position: 'absolute',
+                top: '10px',
+                left: '20px',
+                zIndex: 5,
+                background: 'rgba(255, 255, 255, 0.9)',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                fontFamily: 'Arial, sans-serif',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              }}
+            >
+              B-Tree (Order 4)
+            </div>
+            <div style={{ width: '100%', height: '100%' }}>
+              <BTreeD3Visualizer tree={tree} />
+            </div>
+          </div>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <div
+              style={{
+                position: 'absolute',
+                top: '10px',
+                left: '20px',
+                zIndex: 5,
+                background: 'rgba(255, 255, 255, 0.9)',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                fontFamily: 'Arial, sans-serif',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              }}
+            >
+              Balanced BST
+            </div>
+            <div style={{ width: '100%', height: '100%' }}>
+              <BSTVisualizer bst={bst} />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <BTreeD3Visualizer tree={tree} />
+      )}
     </div>
   );
 };
+

@@ -9,6 +9,7 @@ interface UseD3ZoomOptions {
 
 export const useD3Zoom = ({ svgRef, scaleExtent = [0.1, 3], initialOffset = 100 }: UseD3ZoomOptions) => {
   const currentTransformRef = useRef<d3.ZoomTransform | null>(null);
+  const lastDimensionsRef = useRef<{ width: number; height: number } | null>(null);
 
   const setupZoom = (svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, g: d3.Selection<SVGGElement, unknown, null, undefined>) => {
     // Store current transform before any updates
@@ -36,14 +37,20 @@ export const useD3Zoom = ({ svgRef, scaleExtent = [0.1, 3], initialOffset = 100 
     zoom: d3.ZoomBehavior<SVGSVGElement, unknown>,
     dimensions: { width: number; height: number }
   ) => {
-    if (currentTransformRef.current) {
-      // Restore the saved transform
+    // Check if dimensions have changed significantly (layout change)
+    const dimensionsChanged = lastDimensionsRef.current && (
+      Math.abs(lastDimensionsRef.current.width - dimensions.width) > 100 ||
+      Math.abs(lastDimensionsRef.current.height - dimensions.height) > 100
+    );
+
+    if (currentTransformRef.current && !dimensionsChanged) {
+      // Restore the saved transform only if dimensions haven't changed
       svg.call(
         zoom.transform as any,
         currentTransformRef.current
       );
     } else {
-      // Center the content initially with offset
+      // Center the content initially with offset (first time or after layout change)
       const bounds = g.node()?.getBBox();
       if (bounds) {
         const fullWidth = bounds.width;
@@ -65,6 +72,9 @@ export const useD3Zoom = ({ svgRef, scaleExtent = [0.1, 3], initialOffset = 100 
         currentTransformRef.current = initialTransform;
       }
     }
+
+    // Update last known dimensions
+    lastDimensionsRef.current = { width: dimensions.width, height: dimensions.height };
   };
 
   return {

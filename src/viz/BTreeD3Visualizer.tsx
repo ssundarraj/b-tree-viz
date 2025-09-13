@@ -57,8 +57,8 @@ export const BTreeD3Visualizer: React.FC<BTreeVisualizerProps> = ({ tree }) => {
       return;
     }
 
-    const width = 1200;
-    const height = 600;
+    const width = svgRef.current.clientWidth || 1200;
+    const height = svgRef.current.clientHeight || 600;
     const nodeWidth = 80;
     const nodeHeight = 40;
     const levelSeparation = 180;
