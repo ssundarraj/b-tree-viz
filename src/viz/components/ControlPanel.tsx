@@ -84,6 +84,9 @@ interface ControlInputProps {
   onKeyPress?: (e: React.KeyboardEvent) => void;
   placeholder: string;
   width?: number;
+  type?: 'text' | 'number';
+  min?: number;
+  max?: number;
 }
 
 export const ControlInput: React.FC<ControlInputProps> = ({
@@ -91,15 +94,20 @@ export const ControlInput: React.FC<ControlInputProps> = ({
   onChange,
   onKeyPress,
   placeholder,
-  width = 120
+  width = 120,
+  type = 'text',
+  min,
+  max
 }) => {
   return (
     <input
-      type="text"
+      type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       onKeyPress={onKeyPress}
       placeholder={placeholder}
+      min={min}
+      max={max}
       style={{
         padding: '6px 10px',
         borderRadius: '4px',

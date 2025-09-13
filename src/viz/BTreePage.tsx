@@ -6,6 +6,7 @@ import { BST } from './BST';
 import { BSTVisualizer } from './BSTVisualizer';
 
 export const BTreePage: React.FC = () => {
+  const [order, setOrder] = useState(4);
   const [tree, setTree] = useState(() => createSampleTree());
   const [inputValue, setInputValue] = useState('');
   const [message, setMessage] = useState('');
@@ -25,7 +26,7 @@ export const BTreePage: React.FC = () => {
       return;
     }
 
-    const newTree = new BTree<number>(4);
+    const newTree = new BTree<number>(order);
     // Copy existing tree values
     const values = tree.traverse();
     values.forEach((v) => newTree.insert(v));
@@ -50,7 +51,7 @@ export const BTreePage: React.FC = () => {
       return;
     }
 
-    const newTree = new BTree<number>(4);
+    const newTree = new BTree<number>(order);
     // Copy existing tree values except the one to delete
     const values = tree.traverse();
     const deleted = values.includes(value);
@@ -75,14 +76,14 @@ export const BTreePage: React.FC = () => {
   };
 
   const handleClear = () => {
-    setTree(new BTree<number>(4));
+    setTree(new BTree<number>(order));
     setBst(new BST<number>());
     setMessage('Tree cleared');
     setTimeout(() => setMessage(''), 3000);
   };
 
   const handleReset = () => {
-    const sampleTree = createSampleTree();
+    const sampleTree = createSampleTree(order);
     setTree(sampleTree);
 
     const values = sampleTree.traverse().sort((a, b) => a - b);
@@ -92,6 +93,7 @@ export const BTreePage: React.FC = () => {
     setTimeout(() => setMessage(''), 3000);
   };
 
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleInsert();
@@ -100,7 +102,7 @@ export const BTreePage: React.FC = () => {
 
   return (
     <div style={{ height: '100vh' }}>
-      <ControlPanel title="B-Tree vs BST Comparison" message={message}>
+      <ControlPanel title={`B-Tree vs BST Comparison`} message={message}>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <ControlInput
             value={inputValue}
@@ -120,6 +122,41 @@ export const BTreePage: React.FC = () => {
           <ControlButton onClick={handleReset} color="blue">
             Reset
           </ControlButton>
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            gap: '8px',
+            alignItems: 'center',
+            marginTop: '8px',
+            flexWrap: 'wrap',
+          }}
+        >
+          <span style={{ fontSize: '14px', fontFamily: 'Arial, sans-serif' }}>Order:</span>
+          <ControlInput
+            type="number"
+            value={order.toString()}
+            onChange={(value) => {
+              const num = parseInt(value);
+              if (!isNaN(num) && num >= 3 && num <= 20) {
+                setOrder(num);
+                // Automatically rebuild tree with new order
+                const values = tree.traverse();
+                const newTree = new BTree<number>(num);
+                values.forEach(v => newTree.insert(v));
+                setTree(newTree);
+
+                // Update BST as well
+                const sortedValues = values.sort((a, b) => a - b);
+                setBst(BST.fromSortedArray(sortedValues));
+              }
+            }}
+            placeholder="3-20"
+            min={3}
+            max={20}
+            width={60}
+          />
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
@@ -161,7 +198,7 @@ export const BTreePage: React.FC = () => {
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
               }}
             >
-              B-Tree (Order 4)
+              B-Tree
             </div>
             <div style={{ width: '100%', height: '100%' }}>
               <BTreeD3Visualizer tree={tree} />
@@ -196,4 +233,3 @@ export const BTreePage: React.FC = () => {
     </div>
   );
 };
-

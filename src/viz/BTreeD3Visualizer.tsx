@@ -228,11 +228,11 @@ export const BTreeD3Visualizer: React.FC<BTreeVisualizerProps> = ({ tree }) => {
   );
 };
 
-export const createSampleTree = (): BTree<number> => {
-  const tree = new BTree<number>(4);
-  
+export const createSampleTree = (order: number = 4): BTree<number> => {
+  const tree = new BTree<number>(order);
+
   const keys = [10, 20, 5, 6, 12, 30, 7, 17, 3, 8, 4, 2];
   keys.forEach(key => tree.insert(key));
-  
+
   return tree;
 };

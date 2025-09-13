@@ -15,8 +15,8 @@ interface IndexPointer {
 
 // Custom B-tree that stores index pointers instead of just values
 class IndexBTree extends BTree<IndexPointer> {
-  constructor() {
-    super(4, (a, b) => a.id - b.id);
+  constructor(order: number = 4) {
+    super(order, (a, b) => a.id - b.id);
   }
 
   insertRecord(id: number, rowIndex: number): void {
@@ -56,26 +56,27 @@ class IndexBTree extends BTree<IndexPointer> {
   }
 }
 
-const createInitialData = (): { table: TableRow[], index: IndexBTree } => {
+const createInitialData = (order: number = 4): { table: TableRow[]; index: IndexBTree } => {
   const initialRows: TableRow[] = [
     { id: 10, name: 'Alice Johnson' },
     { id: 25, name: 'Bob Smith' },
     { id: 5, name: 'Charlie Brown' },
     { id: 15, name: 'Diana Prince' },
     { id: 30, name: 'Eve Davis' },
-    { id: 8, name: 'Frank Miller' }
+    { id: 8, name: 'Frank Miller' },
   ];
-  
-  const index = new IndexBTree();
+
+  const index = new IndexBTree(order);
   initialRows.forEach((row, idx) => {
     index.insertRecord(row.id, idx);
   });
-  
+
   return { table: initialRows, index };
 };
 
 export const TablePage: React.FC = () => {
-  const initialData = createInitialData();
+  const [order, setOrder] = useState(4);
+  const initialData = createInitialData(order);
   const [table, setTable] = useState<TableRow[]>(initialData.table);
   const [index, setIndex] = useState(initialData.index);
   const [id, setId] = useState('');
@@ -103,10 +104,10 @@ export const TablePage: React.FC = () => {
     const rowIndex = newTable.length - 1;
 
     // Create new index
-    const newIndex = new IndexBTree();
+    const newIndex = new IndexBTree(order);
     // Copy existing index entries
     const existingData = table.map((row, idx) => ({ id: row.id, rowIndex: idx }));
-    existingData.forEach(data => newIndex.insertRecord(data.id, data.rowIndex));
+    existingData.forEach((data) => newIndex.insertRecord(data.id, data.rowIndex));
     // Add new entry
     newIndex.insertRecord(idNum, rowIndex);
 
@@ -134,8 +135,8 @@ export const TablePage: React.FC = () => {
     }
 
     // Remove from table and rebuild index
-    const newTable = table.filter(row => row.id !== idNum);
-    const newIndex = new IndexBTree();
+    const newTable = table.filter((row) => row.id !== idNum);
+    const newIndex = new IndexBTree(order);
     newTable.forEach((row, idx) => {
       newIndex.insertRecord(row.id, idx);
     });
@@ -150,18 +151,19 @@ export const TablePage: React.FC = () => {
 
   const handleClear = () => {
     setTable([]);
-    setIndex(new IndexBTree());
+    setIndex(new IndexBTree(order));
     setMessage('Table and index cleared');
     setTimeout(() => setMessage(''), 3000);
   };
 
   const handleReset = () => {
-    const resetData = createInitialData();
+    const resetData = createInitialData(order);
     setTable(resetData.table);
     setIndex(resetData.index);
     setMessage('Reset to initial sample data');
     setTimeout(() => setMessage(''), 3000);
   };
+
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -171,7 +173,7 @@ export const TablePage: React.FC = () => {
 
   return (
     <div style={{ height: '100vh' }}>
-      <ControlPanel title="SQL Table with B-Tree Index" message={message}>
+      <ControlPanel title={`SQL Table with B-Tree Index`} message={message}>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <ControlInput
             value={id}
@@ -200,8 +202,48 @@ export const TablePage: React.FC = () => {
           </ControlButton>
         </div>
 
+        <div
+          style={{
+            display: 'flex',
+            gap: '8px',
+            alignItems: 'center',
+            marginTop: '8px',
+            flexWrap: 'wrap',
+          }}
+        >
+          <span style={{ fontSize: '14px', fontFamily: 'Arial, sans-serif' }}>Order:</span>
+          <ControlInput
+            type="number"
+            value={order.toString()}
+            onChange={(value) => {
+              const num = parseInt(value);
+              if (!isNaN(num) && num >= 3 && num <= 20) {
+                setOrder(num);
+                // Automatically rebuild index with new order
+                const newIndex = new IndexBTree(num);
+                table.forEach((row, idx) => {
+                  newIndex.insertRecord(row.id, idx);
+                });
+                setIndex(newIndex);
+              }
+            }}
+            placeholder="3-20"
+            min={3}
+            max={20}
+            width={60}
+          />
+        </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', fontFamily: 'Arial, sans-serif' }}>
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '14px',
+              fontFamily: 'Arial, sans-serif',
+            }}
+          >
             <input
               type="checkbox"
               checked={showArrows}
@@ -217,3 +259,4 @@ export const TablePage: React.FC = () => {
     </div>
   );
 };
+
