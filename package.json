@@ -1,13 +1,15 @@
 {
-  "name": "b-tree-explainer",
+  "name": "b-tree-viz",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "tsx src/index.ts",
-    "dev": "tsx --watch src/index.ts",
-    "build": "tsc",
+    "dev": "vite",
+    "build": "vite build",
+    "build:pages": "vite build",
+    "preview": "vite preview",
     "test": "jest",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx}\"",
     "lint": "eslint src --ext .ts,.tsx",
