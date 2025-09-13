@@ -1,5 +1,8 @@
 https://ssundarraj.com/b-tree-viz/
 
+> [!WARNING]
+> Most of this repo is vibe coded.
+
 ## How B-Trees Work
 
 B-trees are self-balancing search trees designed for systems that read/write large blocks of data (like databases and filesystems).
