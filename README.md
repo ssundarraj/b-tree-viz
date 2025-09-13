@@ -1,6 +1,4 @@
-```
-pnpm vite dev
-```
+https://ssundarraj.com/b-tree-viz/
 
 ## How B-Trees Work
 
