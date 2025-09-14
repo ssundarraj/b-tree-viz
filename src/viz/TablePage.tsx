@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BTree } from '../btree';
 import { IndexBTreeVisualizer } from './IndexBTreeVisualizer';
 import { ControlPanel, ControlButton, ControlInput } from './components/ControlPanel';
+import { getRandomId, getRandomName } from './randomGenerators';
 
 interface TableRow {
   id: number;
@@ -79,8 +80,8 @@ export const TablePage: React.FC = () => {
   const initialData = createInitialData(order);
   const [table, setTable] = useState<TableRow[]>(initialData.table);
   const [index, setIndex] = useState(initialData.index);
-  const [id, setId] = useState('');
-  const [name, setName] = useState('');
+  const [id, setId] = useState(() => getRandomId().toString());
+  const [name, setName] = useState(() => getRandomName());
   const [message, setMessage] = useState('');
   const [showArrows, setShowArrows] = useState(true);
 
@@ -113,8 +114,9 @@ export const TablePage: React.FC = () => {
 
     setTable(newTable);
     setIndex(newIndex);
-    setId('');
-    setName('');
+    // Generate new random values for next insert
+    setId(getRandomId().toString());
+    setName(getRandomName());
     setMessage(`Inserted record with ID ${idNum}`);
     setTimeout(() => setMessage(''), 3000);
   };
@@ -143,8 +145,9 @@ export const TablePage: React.FC = () => {
 
     setTable(newTable);
     setIndex(newIndex);
-    setId('');
-    setName('');
+    // Generate new random values for next operation
+    setId(getRandomId().toString());
+    setName(getRandomName());
     setMessage(`Deleted record with ID ${idNum}`);
     setTimeout(() => setMessage(''), 3000);
   };
@@ -163,7 +166,6 @@ export const TablePage: React.FC = () => {
     setMessage('Reset to initial sample data');
     setTimeout(() => setMessage(''), 3000);
   };
-
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -259,4 +261,3 @@ export const TablePage: React.FC = () => {
     </div>
   );
 };
-

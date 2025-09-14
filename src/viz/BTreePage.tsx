@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BTreeD3Visualizer, createSampleTree } from './BTreeD3Visualizer';
 import { BTree } from '../btree';
 import { ControlPanel, ControlButton, ControlInput } from './components/ControlPanel';
 import { BST } from './BST';
 import { BSTVisualizer } from './BSTVisualizer';
+import { getRandomBTreeValue } from './randomGenerators';
 
 export const BTreePage: React.FC = () => {
   const [order, setOrder] = useState(4);
   const [tree, setTree] = useState(() => createSampleTree());
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState(() => getRandomBTreeValue().toString());
   const [message, setMessage] = useState('');
   const [showComparison, setShowComparison] = useState(false);
   const [bst, setBst] = useState<BST<number>>(() => {
@@ -38,7 +39,8 @@ export const BTreePage: React.FC = () => {
     const sortedValues = [...values, value].sort((a, b) => a - b);
     setBst(BST.fromSortedArray(sortedValues));
 
-    setInputValue('');
+    // Generate new random number for next insert
+    setInputValue(getRandomBTreeValue().toString());
     setMessage(`Inserted ${value}`);
     setTimeout(() => setMessage(''), 3000);
   };
@@ -70,7 +72,8 @@ export const BTreePage: React.FC = () => {
     const sortedValues = newValues.sort((a, b) => a - b);
     setBst(BST.fromSortedArray(sortedValues));
 
-    setInputValue('');
+    // Generate new random number for next operation
+    setInputValue(getRandomBTreeValue().toString());
     setMessage(`Deleted ${value}`);
     setTimeout(() => setMessage(''), 3000);
   };
@@ -92,7 +95,6 @@ export const BTreePage: React.FC = () => {
     setMessage('Tree reset to sample');
     setTimeout(() => setMessage(''), 3000);
   };
-
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -144,7 +146,7 @@ export const BTreePage: React.FC = () => {
                 // Automatically rebuild tree with new order
                 const values = tree.traverse();
                 const newTree = new BTree<number>(num);
-                values.forEach(v => newTree.insert(v));
+                values.forEach((v) => newTree.insert(v));
                 setTree(newTree);
 
                 // Update BST as well
