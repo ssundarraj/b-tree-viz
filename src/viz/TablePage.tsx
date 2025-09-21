@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BTree } from '../btree';
 import { IndexBTreeVisualizer } from './IndexBTreeVisualizer';
 import { ControlPanel, ControlButton, ControlInput } from './components/ControlPanel';
@@ -76,14 +76,73 @@ const createInitialData = (order: number = 4): { table: TableRow[]; index: Index
 };
 
 export const TablePage: React.FC = () => {
-  const [order, setOrder] = useState(4);
-  const initialData = createInitialData(order);
-  const [table, setTable] = useState<TableRow[]>(initialData.table);
-  const [index, setIndex] = useState(initialData.index);
+  // Load initial state from localStorage or use defaults
+  const [order, setOrder] = useState(() => {
+    const saved = localStorage.getItem('btree-viz-index-order');
+    return saved ? parseInt(saved, 10) : 4;
+  });
+
+  const [table, setTable] = useState<TableRow[]>(() => {
+    const savedTable = localStorage.getItem('btree-viz-table-data');
+    const savedOrder = localStorage.getItem('btree-viz-index-order');
+
+    if (savedTable) {
+      try {
+        return JSON.parse(savedTable) as TableRow[];
+      } catch (e) {
+        console.error('Failed to restore table from localStorage', e);
+      }
+    }
+
+    const initialData = createInitialData(savedOrder ? parseInt(savedOrder, 10) : 4);
+    return initialData.table;
+  });
+
+  const [index, setIndex] = useState(() => {
+    const savedTable = localStorage.getItem('btree-viz-table-data');
+    const savedOrder = localStorage.getItem('btree-viz-index-order');
+    const orderNum = savedOrder ? parseInt(savedOrder, 10) : 4;
+
+    if (savedTable) {
+      try {
+        const tableData = JSON.parse(savedTable) as TableRow[];
+        const newIndex = new IndexBTree(orderNum);
+        tableData.forEach((row, idx) => {
+          newIndex.insertRecord(row.id, idx);
+        });
+        return newIndex;
+      } catch (e) {
+        console.error('Failed to restore index from localStorage', e);
+      }
+    }
+
+    const initialData = createInitialData(orderNum);
+    return initialData.index;
+  });
+
   const [id, setId] = useState(() => getRandomId().toString());
   const [name, setName] = useState(() => getRandomName());
   const [message, setMessage] = useState('');
-  const [showArrows, setShowArrows] = useState(true);
+
+  const [showArrows, setShowArrows] = useState(() => {
+    const saved = localStorage.getItem('btree-viz-show-arrows');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  // Save state to localStorage whenever table changes
+  useEffect(() => {
+    localStorage.setItem('btree-viz-table-data', JSON.stringify(table));
+  }, [table]);
+
+  // Save order to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('btree-viz-index-order', order.toString());
+  }, [order]);
+
+  // Save showArrows to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('btree-viz-show-arrows', showArrows.toString());
+  }, [showArrows]);
 
   const handleInsert = () => {
     const idNum = parseInt(id);
@@ -160,6 +219,11 @@ export const TablePage: React.FC = () => {
   };
 
   const handleReset = () => {
+    // Clear localStorage when resetting
+    localStorage.removeItem('btree-viz-table-data');
+    localStorage.removeItem('btree-viz-index-order');
+    localStorage.removeItem('btree-viz-show-arrows');
+
     const resetData = createInitialData(order);
     setTable(resetData.table);
     setIndex(resetData.index);

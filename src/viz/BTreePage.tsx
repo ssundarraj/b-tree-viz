@@ -7,17 +7,72 @@ import { BSTVisualizer } from './BSTVisualizer';
 import { getRandomBTreeValue } from './randomGenerators';
 
 export const BTreePage: React.FC = () => {
-  const [order, setOrder] = useState(4);
-  const [tree, setTree] = useState(() => createSampleTree());
+  // Load initial state from localStorage or use defaults
+  const [order, setOrder] = useState(() => {
+    const saved = localStorage.getItem('btree-viz-tree-order');
+    return saved ? parseInt(saved, 10) : 4;
+  });
+
+  const [tree, setTree] = useState(() => {
+    const savedValues = localStorage.getItem('btree-viz-tree-values');
+    const savedOrder = localStorage.getItem('btree-viz-tree-order');
+
+    if (savedValues && savedOrder) {
+      try {
+        const values = JSON.parse(savedValues);
+        const orderNum = parseInt(savedOrder, 10);
+        const newTree = new BTree<number>(orderNum);
+        values.forEach((v: number) => newTree.insert(v));
+        return newTree;
+      } catch (e) {
+        console.error('Failed to restore tree from localStorage', e);
+      }
+    }
+    return createSampleTree();
+  });
+
   const [inputValue, setInputValue] = useState(() => getRandomBTreeValue().toString());
   const [message, setMessage] = useState('');
-  const [showComparison, setShowComparison] = useState(false);
+
+  const [showComparison, setShowComparison] = useState(() => {
+    const saved = localStorage.getItem('btree-viz-show-comparison');
+    return saved === 'true';
+  });
+
   const [bst, setBst] = useState<BST<number>>(() => {
+    const savedValues = localStorage.getItem('btree-viz-tree-values');
+
+    if (savedValues) {
+      try {
+        const values = JSON.parse(savedValues) as number[];
+        const sortedValues = values.sort((a, b) => a - b);
+        return BST.fromSortedArray(sortedValues);
+      } catch (e) {
+        console.error('Failed to restore BST from localStorage', e);
+      }
+    }
+
     const values = createSampleTree()
       .traverse()
       .sort((a, b) => a - b);
     return BST.fromSortedArray(values);
   });
+
+  // Save state to localStorage whenever tree changes
+  useEffect(() => {
+    const values = tree.traverse();
+    localStorage.setItem('btree-viz-tree-values', JSON.stringify(values));
+  }, [tree]);
+
+  // Save order to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('btree-viz-tree-order', order.toString());
+  }, [order]);
+
+  // Save showComparison to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('btree-viz-show-comparison', showComparison.toString());
+  }, [showComparison]);
 
   const handleInsert = () => {
     const value = parseInt(inputValue);
@@ -86,6 +141,11 @@ export const BTreePage: React.FC = () => {
   };
 
   const handleReset = () => {
+    // Clear localStorage when resetting
+    localStorage.removeItem('btree-viz-tree-values');
+    localStorage.removeItem('btree-viz-tree-order');
+    localStorage.removeItem('btree-viz-show-comparison');
+
     const sampleTree = createSampleTree(order);
     setTree(sampleTree);
 
